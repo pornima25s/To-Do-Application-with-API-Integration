@@ -4,8 +4,29 @@ import { removeTask, toggleTask, updateTaskPriority } from '../store/slices/task
 import type { RootState } from '../store';
 import { Star, Plus, Bell, Calendar, RotateCcw, X, Trash2 } from 'lucide-react';
 
-const TaskList = () => {
-  const tasks = useSelector((state: RootState) => state.tasks.tasks);
+interface TaskListProps {
+  filter: 'all' | 'today' | 'important' | 'planned' | 'assigned';
+}
+
+const TaskList: React.FC<TaskListProps> = ({ filter }) => {
+  const tasks = useSelector((state: RootState) => {
+    const allTasks = state.tasks.tasks;
+    const today = new Date().toISOString().split('T')[0];
+
+    switch (filter) {
+      case 'today':
+        return allTasks.filter(task => task.createdAt.startsWith(today));
+      case 'important':
+        return allTasks.filter(task => task.priority === 'high');
+      case 'planned':
+        return allTasks.filter(task => task.dueDate);
+      case 'assigned':
+        return allTasks.filter(task => task.assignedTo);
+      default:
+        return allTasks;
+    }
+  });
+  
   const theme = useSelector((state: RootState) => state.auth.theme);
   const dispatch = useDispatch();
   const [selectedTask, setSelectedTask] = React.useState<string | null>(null);
@@ -61,7 +82,7 @@ const TaskList = () => {
           ))}
           {tasks.length === 0 && (
             <div className={`p-4 text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-              No tasks yet. Add some tasks to get started!
+              No tasks found for this view.
             </div>
           )}
         </div>

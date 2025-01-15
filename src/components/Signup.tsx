@@ -1,52 +1,66 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { loginStart, loginSuccess, loginFailure, isUserRegistered, getRegisteredUser } from '../store/slices/authSlice';
+import { signupStart, signupSuccess, signupFailure } from '../store/slices/authSlice';
 import type { RootState } from '../store';
-import { LogIn } from 'lucide-react';
-import { validateEmail } from '../utils/validation';
+import { UserPlus } from 'lucide-react';
+import { validatePassword, validateEmail } from '../utils/validation';
 
-const Login = () => {
+const Signup = () => {
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [validationError, setValidationError] = useState('');
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading, error, theme } = useSelector((state: RootState) => state.auth);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationError('');
     
+    // Validate email
     if (!validateEmail(email)) {
-      dispatch(loginFailure('Please enter a valid email address'));
+      setValidationError('Please enter a valid email address');
       return;
     }
 
-    // Check if user is registered
-    if (!isUserRegistered(email)) {
-      dispatch(loginFailure('Account not found. Please sign up first.'));
-      setTimeout(() => {
-        navigate('/signup');
-      }, 2000);
+    // Validate password
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      setValidationError(passwordValidation.message);
       return;
     }
 
-    dispatch(loginStart());
+    if (password !== confirmPassword) {
+      setValidationError('Passwords do not match');
+      return;
+    }
+
+    if (username.length < 3) {
+      setValidationError('Username must be at least 3 characters long');
+      return;
+    }
+
+    dispatch(signupStart());
 
     try {
-      // Get the registered user
-      const user = getRegisteredUser(email);
+      // In a real app, this would be an API call
+      const mockUser = {
+        id: Date.now().toString(),
+        email,
+        username,
+        name: username,
+      };
       
-      if (!user) {
-        throw new Error('User not found');
-      }
-
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      dispatch(loginSuccess(user));
+      dispatch(signupSuccess(mockUser));
       navigate('/dashboard');
     } catch (err) {
-      dispatch(loginFailure(err instanceof Error ? err.message : 'Login failed'));
+      dispatch(signupFailure(err instanceof Error ? err.message : 'Signup failed'));
     }
   };
 
@@ -55,22 +69,35 @@ const Login = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className={`mx-auto h-12 w-12 flex items-center justify-center rounded-full ${theme === 'dark' ? 'bg-blue-900' : 'bg-blue-100'}`}>
-            <LogIn className={`h-6 w-6 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
+            <UserPlus className={`h-6 w-6 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
           </div>
           <h2 className={`mt-6 text-center text-3xl font-extrabold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-            Sign in to your account
+            Create your account
           </h2>
           <p className={`mt-2 text-center text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-            Please sign in with your registered email
+            Please fill in all fields to create your account
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <input
-                type="email"
+                type="text"
                 required
                 className={`appearance-none rounded-t-md relative block w-full px-3 py-2 border ${
+                  theme === 'dark' ? 'border-gray-700 bg-gray-800 text-white placeholder-gray-400' : 'border-gray-300 text-gray-900 placeholder-gray-500'
+                } focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                placeholder="Username (min. 3 characters)"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                minLength={3}
+              />
+            </div>
+            <div>
+              <input
+                type="email"
+                required
+                className={`appearance-none relative block w-full px-3 py-2 border ${
                   theme === 'dark' ? 'border-gray-700 bg-gray-800 text-white placeholder-gray-400' : 'border-gray-300 text-gray-900 placeholder-gray-500'
                 } focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="Email address"
@@ -82,18 +109,33 @@ const Login = () => {
               <input
                 type="password"
                 required
+                className={`appearance-none relative block w-full px-3 py-2 border ${
+                  theme === 'dark' ? 'border-gray-700 bg-gray-800 text-white placeholder-gray-400' : 'border-gray-300 text-gray-900 placeholder-gray-500'
+                } focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                placeholder="Password (min. 8 chars, 1 uppercase, 1 number, 1 special)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                minLength={8}
+              />
+            </div>
+            <div>
+              <input
+                type="password"
+                required
                 className={`appearance-none rounded-b-md relative block w-full px-3 py-2 border ${
                   theme === 'dark' ? 'border-gray-700 bg-gray-800 text-white placeholder-gray-400' : 'border-gray-300 text-gray-900 placeholder-gray-500'
                 } focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
               />
             </div>
           </div>
 
-          {error && (
-            <div className="text-red-500 text-sm text-center">{error}</div>
+          {(error || validationError) && (
+            <div className="text-red-500 text-sm text-center">
+              {validationError || error}
+            </div>
           )}
 
           <div>
@@ -110,22 +152,22 @@ const Login = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Signing in...
+                  Creating account...
                 </>
               ) : (
-                'Sign in'
+                'Sign up'
               )}
             </button>
           </div>
 
           <div className="text-center">
             <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-              Don't have an account?{' '}
+              Already have an account?{' '}
               <Link
-                to="/signup"
+                to="/login"
                 className="font-medium text-blue-600 hover:text-blue-500"
               >
-                Sign up
+                Sign in
               </Link>
             </p>
           </div>
@@ -135,4 +177,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Signup;
