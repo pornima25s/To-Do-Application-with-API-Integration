@@ -20,7 +20,7 @@ const Header = () => {
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-4">
           <h1 className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-            To Do
+          FocusFlow
           </h1>
         </div>
         <div className="flex items-center space-x-4">
