@@ -1,7 +1,7 @@
 # FocusFlow
 
 ## Deployed Website
-Try the live application here: [FocusFlow](https://focusflow-three.vercel.app/login)
+Try the live application here: [FocusFlow](https://focusflow-three.vercel.app)
 
 # Advanced React To-Do Application with API Integration
 
